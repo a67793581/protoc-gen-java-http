@@ -1,4 +1,6 @@
 version: v2
+# 'clean' 设置为 true 时，会在运行代码生成之前删除所有插件的 `out` 字段指定的目录、zip文件和jar文件
+clean: true
 managed:
   enabled: true
   #  disable:
@@ -9,9 +11,9 @@ managed:
 #    - file_option: java_package_prefix
 #      value: ddddddddddddddddddddd
 plugins:
-  - remote: buf.build/protocolbuffers/go
-    out: gen/go
-  - local: protoc-gen-go-http
-    out: gen/go/kratos
-  - local: protoc-gen-java-http
-    out: gen/java/src/main/java
+  #  - local: ./protoc-gen-java-http
+  #    out: gen
+  - local: ["go","run","../"]
+    out: gen/src/main/java
+  - remote: buf.build/protocolbuffers/java
+    out: gen/src/main/java
