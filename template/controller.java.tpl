@@ -34,24 +34,38 @@ public class {{.ControllerName}} {
         {{- end }}) {
     {{- end }}
 
-        {{ $rm := .RequestMessage -}}
-        {{.RequestMessage.Type}} {{.RequestMessage.Name}} = new {{.RequestMessage.Type}}();
-        {{- $rb := .RequestMessage -}}
-        {{- range .PathParams}}
-        {{$rb.Name}}.set{{.Name | ucfirst}}({{.Name}});
-        {{- end}}
 
-        {{- range .QueryParams}}
-        {{$rm.Name}}.set{{.Name | ucfirst }}({{.Name}});
-        {{- end}}
+    {{- if .HasRequestBody}}
+        {{- if .PathParams | or .QueryParams }}
+            {{- if not .IsWildcards }}
+                {{ $rm := .RequestMessage }} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
+                {{- range .PathParams}}
+                    .set{{.Name | ucfirst}}({{.Name}})
+                {{- end}}
 
-        {{- if .HasRequestBody}}
-        {{- if not .IsWildcards }}
-        {{.RequestMessage.Name}}.set{{.RequestBody.Name | ucfirst }}({{.RequestBody.Name}});
+                {{- range .QueryParams}}
+                    .set{{.Name | ucfirst}}({{.Name}})
+                {{- end}}
+                .set{{.RequestBody.Name | ucfirst}}({{.RequestBody.Name}})
+                .build();
+            {{- end}}
+        {{- end }}
+    {{- else }}
+        {{- if .PathParams | or .QueryParams }}
+            {{ $rm := .RequestMessage }} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
+            {{- range .PathParams}}
+                .set{{.Name | ucfirst}}({{.Name}})
+            {{- end}}
+
+            {{- range .QueryParams}}
+                .set{{.Name | ucfirst}}({{.Name}})
+            {{- end}}
+            .build();
         {{- else }}
-        BeanUtils.copyProperties({{.RequestBody.Name}}, {{.RequestMessage.Name}});
-        {{- end}}
-        {{- end}}
+            {{- $rm := .RequestMessage -}}
+            {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder().build();
+        {{- end }}
+    {{- end}}
 
         return {{$svn}}.{{.Method.Name}}({{.RequestMessage.Name}});
     }
