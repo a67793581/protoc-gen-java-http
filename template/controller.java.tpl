@@ -11,8 +11,8 @@ import {{.}};
 @RestController
 @RequiredArgsConstructor
 public class {{.ControllerName}} {
-
-    private final {{.ServiceName}} {{.ServiceVariableName}};
+    @Autowired
+    private {{.ServiceName}} {{.ServiceVariableName}};
     {{- $svn := .ServiceVariableName}}
 
 {{- range .HttpRuleMap}}
