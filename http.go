@@ -4,15 +4,16 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"html/template"
+	"net/http"
+	"regexp"
+	"strings"
+
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
-	"html/template"
-	"net/http"
-	"regexp"
-	"strings"
 )
 
 //go:embed template/application.java.tpl
@@ -271,14 +272,51 @@ func NewControllerTemplate(service *protogen.Service) Template {
 	}
 	httpRuleMap := make(map[string]*HttpRuleDescriptor)
 
-	for _, method := range service.Methods {
-		methods = append(methods, NewMethodDescriptor(method))
-		imports = append(imports, BeanImportPaths(method.Input)...)
-		imports = append(imports, BeanImportPaths(method.Output)...)
-		httpRuleMap[method.GoName] = NewHttpRuleDescriptor(method)
-	}
 	serviceName := ApplicationServiceName(service)
 
+	// 创建一个map来去重导入
+	importMap := make(map[string]struct{})
+	importMap[GetServiceJavaPackage(service)+"."+ApplicationServiceName(service)] = struct{}{}
+
+	for _, method := range service.Methods {
+		methodDesc := NewMethodDescriptor(method)
+		methods = append(methods, methodDesc)
+
+		// 添加方法的输入输出类型
+		importMap[buildMessageFullPath(method.Input)] = struct{}{}
+		importMap[buildMessageFullPath(method.Output)] = struct{}{}
+
+		// 获取HTTP规则
+		httpRule := NewHttpRuleDescriptor(method)
+		httpRuleMap[method.GoName] = httpRule
+
+		// 只添加实际用到的参数类型
+		if httpRule.HasPathParams {
+			for _, param := range httpRule.PathParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+
+		if httpRule.HasQueryParams {
+			for _, param := range httpRule.QueryParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+
+	// 转换importMap为imports切片
+	imports = make([]string, 0, len(importMap))
+	for imp := range importMap {
+		imports = append(imports, imp)
+	}
 	return &ControllerTemplate{
 		service:             service,
 		PackageName:         GetServiceJavaPackage(service),
