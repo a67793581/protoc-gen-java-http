@@ -601,7 +601,7 @@ func BuildQueryParameters(message *protogen.Message, httpRule *annotations.HttpR
 	}
 
 	lookup := func(target string) bool {
-		for name, _ := range pathVars {
+		for name := range pathVars {
 			if name == target {
 				return true
 			}
@@ -633,7 +633,7 @@ func BuildQueryParameters(message *protogen.Message, httpRule *annotations.HttpR
 
 func BuildPathParams(pathVars map[string]*string, message *protogen.Message) []Parameter {
 	params := make([]Parameter, 0)
-	for name, _ := range pathVars {
+	for name := range pathVars {
 		var param *Parameter
 		for _, f := range message.Fields {
 			if string(f.Desc.Name()) == name {
@@ -677,18 +677,6 @@ func TrimComments(comments string) string {
 
 func Package2Path(javaPackage string) string {
 	return strings.Replace(javaPackage, ".", "/", -1)
-}
-
-func BeanImportPaths(message *protogen.Message) []string {
-	paths := make([]string, 0)
-	paths = append(paths, buildMessageFullPath(message))
-	for _, field := range message.Fields {
-		if path, ok := FieldImportPath(field); ok {
-			paths = append(paths, path)
-		}
-	}
-
-	return paths
 }
 
 func IsSampleType(kind protoreflect.Kind) bool {
