@@ -10,12 +10,31 @@ option go_package = "halo/v1;v1";
 option java_multiple_files = true;
 option java_package = "halo.v1";
 
+
+message CreateHaloRequest {
+  // 信息
+  Halo info = 1;
+  StatusEnum.Status status = 2;
+}
+message CreateHaloResponse {
+  int64 id = 1;
+}
+
+message CreateHaloRequest2 {
+}
 service HaloService {
   // 列表
   rpc CreateHalo(CreateHaloRequest) returns (CreateHaloResponse) {
     option (google.api.http) = {
       post: "/v1/halos"
       body: "info"
+    };
+  }
+  // 列表
+  rpc CreateHalo2(CreateHaloRequest2) returns (CreateHaloResponse) {
+    option (google.api.http) = {
+      post: "/v1/halos2"
+      body: ""
     };
   }
 
@@ -41,16 +60,6 @@ service HaloService {
 message BaseInfo {
   string name = 1;
 }
-
-message CreateHaloRequest {
-  // 信息
-  Halo info = 1;
-  StatusEnum.Status status = 2;
-}
-message CreateHaloResponse {
-  int64 id = 1;
-}
-
 message GetHaloRequest {
   int64 id = 1;
   google.protobuf.Timestamp timestamp = 2 [(google.api.field_behavior) = REQUIRED];

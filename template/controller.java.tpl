@@ -25,50 +25,49 @@ public class {{.ControllerName}} {
     {{- if gt (len .Params) 1 }}
         {{- range $index, $param := .Params }}
         {{- if gt $index 0 }},{{end}}
-        {{- "\n\t\t"}}{{.Annotation | safe}} {{.Type}} {{.Name}}
+        {{- "\n\t\t\t"}}{{.Annotation | safe}} {{.Type}} {{.Name}}
         {{- end }}
     ) {
     {{- else }}
         {{- range $index, $param := .Params }}
         {{- if gt $index 0}}, {{end}}
         {{- .Annotation | safe}} {{.Type}} {{ .Name -}}
-        {{- end }}) {
+        {{- end }}) { 
+            
     {{- end }}
-
+    {{- "\n\t\t\t"}}
 
     {{- if .HasRequestBody}}
         {{- if .PathParams | or .QueryParams }}
             {{- if not .IsWildcards }}
-                {{ $rm := .RequestMessage }} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
+                {{- $rm := .RequestMessage -}} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
                 {{- range .PathParams}}
-                    .set{{.Name | ucfirst}}({{.Name}})
+                    {{- "\n\t\t\t  .set" }}{{.Name | ucfirst}}({{.Name}})
                 {{- end}}
 
                 {{- range .QueryParams}}
-                    .set{{.Name | ucfirst}}({{.Name}})
+                    {{- "\n\t\t\t  .set" }}{{.Name | ucfirst}}({{.Name}})
                 {{- end}}
-                .set{{.RequestBody.Name | ucfirst}}({{.RequestBody.Name}})
-                .build();
+                    {{- "\n\t\t\t  .set" }}{{.RequestBody.Name | ucfirst}}({{.RequestBody.Name}})
+                {{- "\n\t\t\t  .build();" }}
             {{- end}}
         {{- end }}
     {{- else }}
         {{- if .PathParams | or .QueryParams }}
-            {{ $rm := .RequestMessage }} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
+            {{- $rm := .RequestMessage -}} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder()
             {{- range .PathParams}}
-                .set{{.Name | ucfirst}}({{.Name}})
+                {{- "\n\t\t\t  .set" }}{{.Name | ucfirst}}({{.Name}})
             {{- end}}
 
             {{- range .QueryParams}}
-                .set{{.Name | ucfirst}}({{.Name}})
+                {{- "\n\t\t\t  .set" }}{{.Name | ucfirst}}({{.Name}})
             {{- end}}
-            .build();
+            {{- "\n\t\t\t  .build();" }}
         {{- else }}
-            {{- $rm := .RequestMessage -}}
-            {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder().build();
+            {{- $rm := .RequestMessage -}} {{ $rm.Type }} {{ $rm.Name }} = {{ $rm.Type }}.newBuilder().build();
         {{- end }}
     {{- end}}
-
-        return {{$svn}}.{{.Method.Name}}({{.RequestMessage.Name}});
+      return {{$svn}}.{{.Method.Name}}({{.RequestMessage.Name}});
     }
 {{- end}}
 }
