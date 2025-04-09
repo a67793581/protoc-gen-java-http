@@ -17,15 +17,6 @@ import (
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-//go:embed template/application.java.tpl
-var applicationTemplate string
-
-//go:embed template/controller.java.tpl
-var controllerTemplate string
-
-//go:embed template/webclient.java.tpl.html
-var webClientTemplate string
-
 //go:embed version
 var version string
 
@@ -137,6 +128,9 @@ func NewApplicationJavaTemplate(service *protogen.Service) Template {
 func (t *ApplicationTemplate) FileName() string {
 	return Package2Path(t.PackageName) + "/" + t.ServiceName + ".java"
 }
+
+//go:embed template/application.java.tpl
+var applicationTemplate string
 
 func (t *ApplicationTemplate) Execute() string {
 	for _, method := range t.Methods {
@@ -255,6 +249,9 @@ type ControllerTemplate struct {
 func (ctl *ControllerTemplate) FileName() string {
 	return Package2Path(ctl.PackageName+"."+ctl.ControllerName) + ".java"
 }
+
+//go:embed template/controller.java.tpl
+var controllerTemplate string
 
 func (ctl *ControllerTemplate) Execute() string {
 	tmpl, err := template.New("ctl").Funcs(funcMap).Parse(controllerTemplate)
@@ -773,6 +770,9 @@ type WebClientTemplate struct {
 func (t *WebClientTemplate) FileName() string {
 	return Package2Path(t.PackageName) + "/" + t.ServiceName + "WebClient.java"
 }
+
+//go:embed template/webclient.java.tpl
+var webClientTemplate string
 
 func (t *WebClientTemplate) Execute() string {
 	tmpl, err := tt.New("webclient").Parse(webClientTemplate)

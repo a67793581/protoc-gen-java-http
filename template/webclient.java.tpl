@@ -1,16 +1,14 @@
 package {{.PackageName}};
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 
-import cn.hutool.core.collection.CollectionUtil;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -21,14 +19,8 @@ import okhttp3.Response;
 import {{.}};
 {{- end}}
 
-@Configuration
+@Slf4j
 public class {{.ServiceName}}WebClient {
-
-    @Bean
-    public {{.ServiceName}}WebClient buildWebClient() {
-
-        return new {{.ServiceName}}WebClient(webClient);
-    }
 
     private final OkHttpClient httpClient;
     private final String baseUrl;
@@ -38,56 +30,52 @@ public class {{.ServiceName}}WebClient {
         this.baseUrl = baseUrl;
     }
 
-    {{ range .HttpRuleMap }}
-        {{ if .Method.HasComment }}
-           {{- "\n\t //"}} {{ .Method.Comment -}}
-        {{ end }}
-        {{- "\n\t" }} public Mono<{{ .ResponseBody.Type }}> {{.Method.Name}}({{ .RequestMessage.Type }} {{ .RequestMessage.Name -}}
-        ) {
-            // 构建请求
-            RequestBodySpec request = webClient.method(HttpMethod.valueOf("{{ .HttpMethod }}"))
-                    .uri(uriBuilder -> {
-                        {{ if .HasPathParams }}
-                            {{ range .PathParams }}
-                                uriBuilder = uriBuilder.pathSegment("{" + "{{ .Name }}" + "}");
-                            {{ end }}
-                        {{ end }}
-                        {{ if .HasQueryParams }}
-                            {{ range .QueryParams }}
-                                uriBuilder = uriBuilder.queryParam("{{ .Name }}", {{ .Name }});
-                            {{ end }}
-                        {{ end }}
-                        return uriBuilder.build(
-                            {{ if .HasPathParams }}
-                                {{ range .PathParams }}
-                                    {{ .Name }},
-                                {{ end }}
-                            {{ end }}
-                        );
-                    });
+    private <T extends Message, K extends Message> T jsonPostCall(String baseUrl, K request, T.Builder responseBuilder) throws IOException {
 
-            {{ if .HasRequestBody }}
-                // 添加请求体
-                request = request.bodyValue({{ .RequestMessage.Name }}.get{{ .RequestBody.Name }}());
-            {{ end }}
+        String json = JsonFormat.printer().includingDefaultValueFields().print(request);
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
-            // 发送请求并处理响应
-            return request.retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<{{ .ResponseBody.Type }}>() {})
-                    .flatMap(resp -> {
-                        // 处理响应
-                        if (resp.getCode() == 200) {
-                            {{ .ResponseBody.Type }} data = resp.getData();
-                            if (data != null) {
-                                return Mono.just(data);
-                            }
-                        } else {
-                            log.error("{{ .Method.Name }} code != 200: {}", resp);
-                        }
-                        return Mono.empty();
-                    })
-                    .doOnError(error -> log.error("{{ .Method.Name }} Error occurred: {}", error.getMessage()));
+        Request httpRequest = new Request.Builder()
+            .url(baseUrl)
+            .post(body)
+            .build();
+
+        try (Response response = httpClient.newCall(httpRequest).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+
+            String responseBody = response.body().string();
+            if (StringUtils.isBlank(responseBody)){
+                return null;
+            }
+
+            JsonFormat.parser().merge(responseBody, responseBuilder);
+            return (T) responseBuilder.build();
         }
-    {{ end }}
+    }
+
+    private String getCurrentMethodName() {
+        return Thread.currentThread().getStackTrace()[2].getMethodName();
+    }
+
+{{ range .HttpRuleMap }}
+    {{- "\n\t //"}}{{ .Method.Comment -}} {{.HttpMethod}}
+    {{- "\n\t" }}public {{ .ResponseBody.Type }} {{.Method.Name}}({{ .RequestMessage.Type }} {{ .RequestMessage.Name -}}
+    ) {
+    {{- if eq .HttpMethod "Post" }}
+        {{ .ResponseBody.Type }}.Builder res = {{ .ResponseBody.Type }}.newBuilder();
+        try {
+            return this.jsonPostCall(baseUrl + "{{.HttpPath}}", {{ .RequestMessage.Name }}, res);
+        } catch (Exception e) {
+            log.error("[{}] error", getCurrentMethodName(), e);
+            return null;
+        }
+    {{- end }}
+    {{- if ne .HttpMethod "Post" }}
+        return null;
+    {{- end }}
+    }
+{{ end }}
 
 }
