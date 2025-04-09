@@ -15,7 +15,7 @@ echo "新版本: $new_version"
 echo $new_version > version
 
 # 提交到git
-git add version
+git add -A
 git commit -m "chore: bump version to $new_version"
 
 # 创建新标签

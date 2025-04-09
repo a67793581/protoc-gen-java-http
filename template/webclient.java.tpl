@@ -18,12 +18,12 @@ import okhttp3.Response;
 import {{.}};
 {{- end}}
 
-public class {{.ServiceName}}HttpClient {
+public class {{.ServiceName}}WebClient {
 
     private final OkHttpClient httpClient;
     private final String baseUrl;
 
-    public {{.ServiceName}}HttpClient(OkHttpClient httpClient, String baseUrl) {
+    public {{.ServiceName}}WebClient(OkHttpClient httpClient, String baseUrl) {
         this.httpClient = httpClient;
         this.baseUrl = baseUrl;
     }
