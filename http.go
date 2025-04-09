@@ -835,7 +835,7 @@ func NewWebClientTemplate(service *protogen.Service) Template {
 	}
 	return &WebClientTemplate{
 		PackageName: GetServiceJavaPackage(service),
-		ServiceName: strings.Replace(service.GoName, "Service", "HttpClient", -1),
+		ServiceName: strings.Replace(service.GoName, "Service", "", -1) + "HttpClient",
 		Imports:     RemoveDuplicates(imports),
 		HttpRuleMap: httpRuleMap,
 	}
