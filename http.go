@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	tt "text/template"
 
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -22,7 +23,7 @@ var applicationTemplate string
 //go:embed template/controller.java.tpl
 var controllerTemplate string
 
-//go:embed template/webclient.java.tpl
+//go:embed template/webclient.java.tpl.html
 var webClientTemplate string
 
 //go:embed version
@@ -774,7 +775,7 @@ func (t *WebClientTemplate) FileName() string {
 }
 
 func (t *WebClientTemplate) Execute() string {
-	tmpl, err := template.New("webclient").Parse(webClientTemplate)
+	tmpl, err := tt.New("webclient").Parse(webClientTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -834,7 +835,7 @@ func NewWebClientTemplate(service *protogen.Service) Template {
 	}
 	return &WebClientTemplate{
 		PackageName: GetServiceJavaPackage(service),
-		ServiceName: strings.Replace(service.GoName, "Service", "WebClient", -1),
+		ServiceName: strings.Replace(service.GoName, "Service", "", -1),
 		Imports:     RemoveDuplicates(imports),
 		HttpRuleMap: httpRuleMap,
 	}
