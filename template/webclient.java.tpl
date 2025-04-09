@@ -3,7 +3,6 @@ package {{.PackageName}};
 import java.io.IOException;
 import java.util.*;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.protobuf.Message;
@@ -19,7 +18,6 @@ import okhttp3.Response;
 import {{.}};
 {{- end}}
 
-@Slf4j
 public class {{.ServiceName}}WebClient {
 
     private final OkHttpClient httpClient;
@@ -62,15 +60,10 @@ public class {{.ServiceName}}WebClient {
 {{ range .HttpRuleMap }}
     {{- "\n\t //"}}{{ .Method.Comment -}} {{.HttpMethod}}
     {{- "\n\t" }}public {{ .ResponseBody.Type }} {{.Method.Name}}({{ .RequestMessage.Type }} {{ .RequestMessage.Name -}}
-    ) {
+    ) throws IOException {
     {{- if eq .HttpMethod "Post" }}
         {{ .ResponseBody.Type }}.Builder res = {{ .ResponseBody.Type }}.newBuilder();
-        try {
-            return this.jsonPostCall(baseUrl + "{{.HttpPath}}", {{ .RequestMessage.Name }}, res);
-        } catch (Exception e) {
-            log.error("[{}] error", getCurrentMethodName(), e);
-            return null;
-        }
+        return this.jsonPostCall(baseUrl + "{{.HttpPath}}", {{ .RequestMessage.Name }}, res);
     {{- end }}
     {{- if ne .HttpMethod "Post" }}
         return null;
