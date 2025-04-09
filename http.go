@@ -768,7 +768,7 @@ type WebClientTemplate struct {
 }
 
 func (t *WebClientTemplate) FileName() string {
-	return Package2Path(t.PackageName) + "/" + t.ServiceName + "WebClient.java"
+	return Package2Path(t.PackageName) + "/" + t.ServiceName + "HttpClient.java"
 }
 
 //go:embed template/webclient.java.tpl
