@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 设置错误立即退出
+set -e
+
 # 获取当前版本号
 current_version=$(cat version)
 echo "当前版本: $current_version"
