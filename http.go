@@ -22,6 +22,9 @@ var applicationTemplate string
 //go:embed template/controller.java.tpl
 var controllerTemplate string
 
+//go:embed template/webclient.java.tpl
+var webClientTemplate string
+
 //go:embed version
 var version string
 
@@ -52,6 +55,7 @@ func (spring *SpringBootPlugin) Generate() error {
 func (spring *SpringBootPlugin) generate(file *protogen.File) {
 	spring.generateSpringBootController(file)
 	spring.generateSpringBootApplication(file)
+	spring.generateWebClient(file) // 添加这一行
 }
 
 func (spring *SpringBootPlugin) generateHeader(file *protogen.File) string {
@@ -755,4 +759,93 @@ func buildMessageFullPath(input *protogen.Message) string {
 	}
 	pathParts = append(pathParts, string(input.Desc.Name()))
 	return JavaPackage + "." + strings.Join(pathParts, ".")
+}
+
+type WebClientTemplate struct {
+	PackageName string
+	ServiceName string
+
+	Imports     []string
+	HttpRuleMap map[string]*HttpRuleDescriptor
+}
+
+func (t *WebClientTemplate) FileName() string {
+	return Package2Path(t.PackageName) + "/" + t.ServiceName + "WebClient.java"
+}
+
+func (t *WebClientTemplate) Execute() string {
+	tmpl, err := template.New("webclient").Parse(webClientTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, t); err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(buf.String())
+}
+
+func NewWebClientTemplate(service *protogen.Service) Template {
+	imports := []string{
+		GetServiceJavaPackage(service) + "." + ApplicationServiceName(service),
+	}
+	httpRuleMap := make(map[string]*HttpRuleDescriptor)
+	// 创建一个map来去重导入
+	importMap := make(map[string]struct{})
+	importMap[GetServiceJavaPackage(service)+"."+ApplicationServiceName(service)] = struct{}{}
+
+	for _, method := range service.Methods {
+		// 添加方法的输入输出类型
+		importMap[buildMessageFullPath(method.Input)] = struct{}{}
+		importMap[buildMessageFullPath(method.Output)] = struct{}{}
+
+		// 获取HTTP规则
+		httpRule := NewHttpRuleDescriptor(method)
+		httpRuleMap[method.GoName] = httpRule
+
+		// 只添加实际用到的参数类型
+		if httpRule.HasPathParams {
+			for _, param := range httpRule.PathParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+
+		if httpRule.HasQueryParams {
+			for _, param := range httpRule.QueryParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+
+	// 转换importMap为imports切片
+	imports = make([]string, 0, len(importMap))
+	for imp := range importMap {
+		imports = append(imports, imp)
+	}
+	return &WebClientTemplate{
+		PackageName: GetServiceJavaPackage(service),
+		ServiceName: strings.Replace(service.GoName, "Service", "WebClient", -1),
+		Imports:     RemoveDuplicates(imports),
+		HttpRuleMap: httpRuleMap,
+	}
+}
+
+// 添加新的生成方法
+func (spring *SpringBootPlugin) generateWebClient(file *protogen.File) {
+	for _, service := range file.Services {
+		tmpl := NewWebClientTemplate(service)
+		g := spring.plugin.NewGeneratedFile(tmpl.FileName(), file.GoImportPath)
+		g.P(spring.generateHeader(file))
+		g.P(tmpl.Execute())
+	}
 }

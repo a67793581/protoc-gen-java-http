@@ -30,11 +30,19 @@ service HaloService {
       body: "info"
     };
   }
+
   // 列表
   rpc CreateHalo2(CreateHaloRequest2) returns (CreateHaloResponse) {
     option (google.api.http) = {
       post: "/v1/halos2"
       body: ""
+    };
+  }
+
+  // 列表
+  rpc CreateHalo3(CreateHaloRequest2) returns (CreateHaloResponse) {
+    option (google.api.http) = {
+      post: "/v1/halos3"
     };
   }
 
