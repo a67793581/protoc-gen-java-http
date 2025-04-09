@@ -1,20 +1,21 @@
 package {{.PackageName}};
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PathVariable;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import reactor.netty.Connection;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
-import reactor.netty.resources.ConnectionProvider;
-import reactor.core.publisher.Mono;
-import org.springframework.web.reactive.function.client.WebClient.RequestBodySpec;
+import java.io.IOException;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.google.protobuf.Message;
+import com.google.protobuf.util.JsonFormat;
+
+import cn.hutool.core.collection.CollectionUtil;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 {{- range .Imports}}
 import {{.}};
@@ -24,41 +25,16 @@ import {{.}};
 public class {{.ServiceName}}WebClient {
 
     @Bean
-    public {{.ServiceName}}WebClient {{.ServiceName}}WebClient() {
-        // 设置连接池，最大连接数为 50，最大空闲时间 30 秒
-        ConnectionProvider provider = ConnectionProvider.builder("{{.ServiceName}}_client")
-                .maxConnections(50)  // 最大连接数
-                .maxIdleTime(Duration.ofSeconds(30))  // 最大空闲时间
-                .maxLifeTime(Duration.ofSeconds(60))  // 最大生存时间
-                .build();
+    public {{.ServiceName}}WebClient buildWebClient() {
 
-        // 创建 TcpClient 并配置连接池
-        TcpClient tcpClient = TcpClient.create(provider)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // 连接超时
-                .doOnConnected(connection ->
-                        connection.addHandlerLast(new ReadTimeoutHandler(60))  // 读取超时
-                                .addHandlerLast(new WriteTimeoutHandler(60))); // 写入超时
-
-        // 创建 HttpClient
-        HttpClient httpClient = HttpClient.from(tcpClient)
-                .responseTimeout(Duration.ofSeconds(60));  // 响应超时
-
-        // 使用 ReactorClientHttpConnector 作为连接器
-        WebClient webClient = WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .codecs(configurer -> configurer.defaultCodecs()
-                        .maxInMemorySize(16 * 1024 * 1024))  // 设置缓存限制为 16MB
-                .build();
-
-        // 返回自定义的 WebClientWrapper 实例
         return new {{.ServiceName}}WebClient(webClient);
     }
 
-    private final WebClient webClient;
+    private final OkHttpClient httpClient;
     private final String baseUrl;
 
-    public {{.ServiceName}}WebClient(WebClient webClient, String baseUrl) {
-        this.webClient = webClient;
+    public {{.ServiceName}}WebClient(OkHttpClient httpClient, String baseUrl) {
+        this.httpClient = httpClient;
         this.baseUrl = baseUrl;
     }
 
