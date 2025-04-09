@@ -768,7 +768,7 @@ type WebClientTemplate struct {
 }
 
 func (t *WebClientTemplate) FileName() string {
-	return Package2Path(t.PackageName) + "/" + t.ServiceName + "HttpClient.java"
+	return Package2Path(t.PackageName) + "/" + t.ServiceName + ".java"
 }
 
 //go:embed template/webclient.java.tpl
@@ -835,7 +835,7 @@ func NewWebClientTemplate(service *protogen.Service) Template {
 	}
 	return &WebClientTemplate{
 		PackageName: GetServiceJavaPackage(service),
-		ServiceName: strings.Replace(service.GoName, "Service", "", -1),
+		ServiceName: strings.Replace(service.GoName, "Service", "HttpClient", -1),
 		Imports:     RemoveDuplicates(imports),
 		HttpRuleMap: httpRuleMap,
 	}
