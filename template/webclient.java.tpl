@@ -30,7 +30,7 @@ public class {{.ServiceName}} {
 
     private <T extends Message, K extends Message> T jsonPostCall(String baseUrl, K request, T.Builder responseBuilder) throws IOException {
 
-        String json = JsonFormat.printer().includingDefaultValueFields().print(request);
+        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().print(request);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
         Request httpRequest = new Request.Builder()
@@ -51,10 +51,6 @@ public class {{.ServiceName}} {
             JsonFormat.parser().merge(responseBody, responseBuilder);
             return (T) responseBuilder.build();
         }
-    }
-
-    private String getCurrentMethodName() {
-        return Thread.currentThread().getStackTrace()[2].getMethodName();
     }
 
 {{ range .HttpRuleMap }}
