@@ -2,17 +2,11 @@ package {{.PackageName}};
 
 import java.io.IOException;
 import java.util.*;
-
-import org.apache.commons.lang3.StringUtils;
+import okhttp3.*;
 
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 {{- range .Imports}}
 import {{.}};
@@ -29,27 +23,32 @@ public class {{.ServiceName}} {
     }
 
     private <T extends Message, K extends Message> T jsonPostCall(String baseUrl, K request, T.Builder responseBuilder) throws IOException {
+        return jsonPostCall(baseUrl, request, responseBuilder, null);
+    }
 
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().print(request);
-        RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
-
-        Request httpRequest = new Request.Builder()
-            .url(baseUrl)
-            .post(body)
-            .build();
-
-        try (Response response = httpClient.newCall(httpRequest).execute()) {
+    private <T extends Message, K extends Message> T jsonPostCall(String baseUrl, K request, T.Builder responseBuilder, Headers headers) throws IOException {
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(baseUrl)
+                .post(RequestBody.create(JsonFormat.printer().alwaysPrintFieldsWithNoPresence().print(request),
+                        MediaType.parse("application/json")));
+        
+        if (headers != null) {
+            requestBuilder.headers(headers);
+        }
+        
+        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
             }
 
             String responseBody = response.body().string();
-            if (StringUtils.isBlank(responseBody)){
+            if (responseBody == null || responseBody.isBlank()) {
                 return null;
             }
-
             JsonFormat.parser().merge(responseBody, responseBuilder);
-            return (T) responseBuilder.build();
+            @SuppressWarnings("unchecked")
+            T result = (T) responseBuilder.build();
+            return result;
         }
     }
 
