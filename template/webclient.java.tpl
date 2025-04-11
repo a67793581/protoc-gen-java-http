@@ -55,6 +55,20 @@ public class {{.ServiceName}} {
 {{ range .HttpRuleMap }}
     {{- "\n\t //"}}{{ .Method.Comment -}} {{.HttpMethod}}
     {{- "\n\t" }}public {{ .ResponseBody.Type }} {{.Method.Name}}({{ .RequestMessage.Type }} {{ .RequestMessage.Name -}}
+    , Headers headers) throws IOException {
+    {{- if eq .HttpMethod "Post" }}
+        {{ .ResponseBody.Type }}.Builder res = {{ .ResponseBody.Type }}.newBuilder();
+        return this.jsonPostCall(baseUrl + "{{.HttpPath}}", {{ .RequestMessage.Name }}, res, headers);
+    {{- end }}
+    {{- if ne .HttpMethod "Post" }}
+        return null;
+    {{- end }}
+    }
+{{ end }}
+
+{{ range .HttpRuleMap }}
+    {{- "\n\t //"}}{{ .Method.Comment -}} {{.HttpMethod}}
+    {{- "\n\t" }}public {{ .ResponseBody.Type }} {{.Method.Name}}({{ .RequestMessage.Type }} {{ .RequestMessage.Name -}}
     ) throws IOException {
     {{- if eq .HttpMethod "Post" }}
         {{ .ResponseBody.Type }}.Builder res = {{ .ResponseBody.Type }}.newBuilder();
@@ -65,5 +79,4 @@ public class {{.ServiceName}} {
     {{- end }}
     }
 {{ end }}
-
 }
