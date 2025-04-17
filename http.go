@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"github.com/yunlyz/protoc-gen-java-http/options"
 	"html/template"
 	"net/http"
 	"regexp"
@@ -64,6 +65,11 @@ func (spring *SpringBootPlugin) generateHeader(file *protogen.File) string {
 
 func (spring *SpringBootPlugin) generateSpringBootController(file *protogen.File) {
 	for _, service := range file.Services {
+		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_ServiceHandler).(*options.ServiceOption); serviceHandler != nil {
+			if serviceHandler.SpringFlux {
+				continue
+			}
+		}
 		ctl := NewControllerTemplate(service)
 		g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
 		g.P(spring.generateHeader(file))
@@ -72,6 +78,11 @@ func (spring *SpringBootPlugin) generateSpringBootController(file *protogen.File
 }
 func (spring *SpringBootPlugin) generateSpringBootControllerFlux(file *protogen.File) {
 	for _, service := range file.Services {
+		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_ServiceHandler).(*options.ServiceOption); serviceHandler != nil {
+			if !serviceHandler.SpringFlux {
+				continue
+			}
+		}
 		ctl := NewControllerTemplateFlux(service)
 		g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
 		g.P(spring.generateHeader(file))

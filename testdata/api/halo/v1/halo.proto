@@ -5,6 +5,8 @@ package halo.v1;
 import "google/api/annotations.proto";
 import "google/api/field_behavior.proto";
 import "google/protobuf/timestamp.proto";
+import "spring/options/service.proto";
+
 
 option go_package = "halo/v1;v1";
 option java_multiple_files = true;
@@ -23,6 +25,9 @@ message CreateHaloResponse {
 message CreateHaloRequest2 {
 }
 service HaloService {
+  option (spring.options.service_handler) = {
+    spring_flux : true,
+  };
   // 列表
   rpc CreateHalo(CreateHaloRequest) returns (CreateHaloResponse) {
     option (google.api.http) = {

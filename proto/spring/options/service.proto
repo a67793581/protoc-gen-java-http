@@ -1,0 +1,25 @@
+
+
+syntax = "proto3";
+
+package spring.options;
+
+option go_package = "./;options";
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.ServiceOptions {
+  optional ServiceOption service_handler = 60000;
+}
+message ServiceOption {
+  bool spring_flux = 1;
+}
+
+extend google.protobuf.MethodOptions {
+  optional MethodOption method_handler = 61000;
+}
+
+
+message MethodOption {
+
+}

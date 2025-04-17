@@ -17,3 +17,7 @@ plugins:
     out: gen/src/main/java
   - remote: buf.build/protocolbuffers/java
     out: gen/src/main/java
+inputs:
+  - directory: api
+    paths:
+      - api/halo/v1/halo.proto

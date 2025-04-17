@@ -3,6 +3,7 @@ modules:
   - path: api
 deps:
   - buf.build/googleapis/googleapis
+  - buf.build/a67793581/spring
 lint:
   use:
     - DEFAULT
