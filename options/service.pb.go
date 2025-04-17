@@ -90,9 +90,8 @@ const file_spring_options_service_proto_rawDesc = "" +
 	"\x1cspring/options/service.proto\x12\x0espring.options\x1a google/protobuf/descriptor.proto\"'\n" +
 	"\fSpringOption\x12\x17\n" +
 	"\ais_flux\x18\x01 \x01(\bR\x06isFlux:g\n" +
-	"\rspring_option\x12\x1f.google.protobuf.ServiceOptions\x18\xe0\xd4\x03 \x01(\v2\x1c.spring.options.SpringOptionR\fspringOption\x88\x01\x01B\x87\x01\n" +
-	"\x12com.spring.optionsB\fServiceProtoP\x01Z\n" +
-	"./;options\xa2\x02\x03SOX\xaa\x02\x0eSpring.Options\xca\x02\x0eSpring\\Options\xe2\x02\x1aSpring\\Options\\GPBMetadata\xea\x02\x0fSpring::Optionsb\x06proto3"
+	"\rspring_option\x12\x1f.google.protobuf.ServiceOptions\x18\xe0\xd4\x03 \x01(\v2\x1c.spring.options.SpringOptionR\fspringOption\x88\x01\x01B\x86\x01\n" +
+	"\x12com.spring.optionsB\fServiceProtoP\x01Z\t.;options\xa2\x02\x03SOX\xaa\x02\x0eSpring.Options\xca\x02\x0eSpring\\Options\xe2\x02\x1aSpring\\Options\\GPBMetadata\xea\x02\x0fSpring::Optionsb\x06proto3"
 
 var (
 	file_spring_options_service_proto_rawDescOnce sync.Once

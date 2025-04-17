@@ -4,7 +4,7 @@ syntax = "proto3";
 
 package spring.options;
 
-option go_package = "./;options";
+option go_package = ".;options";
 
 import "google/protobuf/descriptor.proto";
 
