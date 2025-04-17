@@ -46,8 +46,9 @@ func (spring *SpringBootPlugin) Generate() error {
 
 func (spring *SpringBootPlugin) generate(file *protogen.File) {
 	spring.generateSpringBootController(file)
+	spring.generateSpringBootControllerFlux(file)
 	spring.generateSpringBootApplication(file)
-	spring.generateWebClient(file) // 添加这一行
+	spring.generateWebClient(file)
 }
 
 func (spring *SpringBootPlugin) generateHeader(file *protogen.File) string {
@@ -63,19 +64,27 @@ func (spring *SpringBootPlugin) generateHeader(file *protogen.File) string {
 
 func (spring *SpringBootPlugin) generateSpringBootController(file *protogen.File) {
 	for _, service := range file.Services {
-		tmpl := NewControllerTemplate(service)
-		g := spring.plugin.NewGeneratedFile(tmpl.FileName(), file.GoImportPath)
+		ctl := NewControllerTemplate(service)
+		g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
 		g.P(spring.generateHeader(file))
-		g.P(tmpl.Execute())
+		g.P(ctl.Execute())
+	}
+}
+func (spring *SpringBootPlugin) generateSpringBootControllerFlux(file *protogen.File) {
+	for _, service := range file.Services {
+		ctl := NewControllerTemplateFlux(service)
+		g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
+		g.P(spring.generateHeader(file))
+		g.P(ctl.Execute())
 	}
 }
 
 func (spring *SpringBootPlugin) generateSpringBootApplication(file *protogen.File) {
 	for _, service := range file.Services {
-		sd := NewApplicationJavaTemplate(service)
-		g := spring.plugin.NewGeneratedFile(sd.FileName(), file.GoImportPath)
+		atl := NewApplicationJavaTemplate(service)
+		g := spring.plugin.NewGeneratedFile(atl.FileName(), file.GoImportPath)
 		g.P(spring.generateHeader(file))
-		g.P(sd.Execute())
+		g.P(atl.Execute())
 	}
 }
 
@@ -137,7 +146,7 @@ func (t *ApplicationTemplate) Execute() string {
 		t.MethodMap[method.Name] = method
 	}
 
-	tmpl, err := template.New("http").Parse(applicationTemplate)
+	tmpl, err := template.New("atl").Parse(applicationTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -234,39 +243,6 @@ func NewFieldDescriptor(field *protogen.Field) *FieldDescriptor {
 	}
 }
 
-type ControllerTemplate struct {
-	service *protogen.Service
-
-	PackageName         string
-	ControllerName      string
-	Methods             []*MethodDescriptor
-	Imports             []string
-	HttpRuleMap         map[string]*HttpRuleDescriptor
-	ServiceName         string
-	ServiceVariableName string
-}
-
-func (ctl *ControllerTemplate) FileName() string {
-	return Package2Path(ctl.PackageName+"."+ctl.ControllerName) + ".java"
-}
-
-//go:embed template/controller.java.tpl
-var controllerTemplate string
-
-func (ctl *ControllerTemplate) Execute() string {
-	tmpl, err := template.New("ctl").Funcs(funcMap).Parse(controllerTemplate)
-	if err != nil {
-		panic(err)
-	}
-
-	buf := new(bytes.Buffer)
-	if err := tmpl.Execute(buf, ctl); err != nil {
-		panic(err)
-	}
-
-	return strings.TrimSpace(buf.String())
-}
-
 func NewControllerTemplate(service *protogen.Service) Template {
 	methods := make([]*MethodDescriptor, 0)
 	imports := []string{
@@ -322,13 +298,147 @@ func NewControllerTemplate(service *protogen.Service) Template {
 	return &ControllerTemplate{
 		service:             service,
 		PackageName:         GetServiceJavaPackage(service),
-		ControllerName:      ControllerName(service),
 		Methods:             methods,
 		Imports:             RemoveDuplicates(imports),
 		HttpRuleMap:         httpRuleMap,
 		ServiceName:         serviceName,
 		ServiceVariableName: lcfirst(serviceName),
 	}
+}
+
+type ControllerTemplate struct {
+	service *protogen.Service
+
+	PackageName         string
+	Methods             []*MethodDescriptor
+	Imports             []string
+	HttpRuleMap         map[string]*HttpRuleDescriptor
+	ServiceName         string
+	ServiceVariableName string
+}
+
+func (ctl *ControllerTemplate) ControllerName() string {
+	return strings.Replace(ctl.ServiceName, "ApplicationService", "", -1) + "Controller"
+}
+
+func (ctl *ControllerTemplate) FileName() string {
+	return Package2Path(ctl.PackageName+"."+ctl.ControllerName()) + ".java"
+}
+
+//go:embed template/controller.java.tpl
+var controllerTemplate string
+
+func (ctl *ControllerTemplate) Execute() string {
+	tmpl, err := tt.New("ctl").Funcs(funcMap).Parse(controllerTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, ctl); err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(buf.String())
+}
+
+func NewControllerTemplateFlux(service *protogen.Service) Template {
+	methods := make([]*MethodDescriptor, 0)
+	imports := []string{
+		GetServiceJavaPackage(service) + "." + ApplicationServiceName(service),
+	}
+	httpRuleMap := make(map[string]*HttpRuleDescriptor)
+
+	serviceName := ApplicationServiceName(service)
+
+	// 创建一个map来去重导入
+	importMap := make(map[string]struct{})
+	importMap[GetServiceJavaPackage(service)+"."+ApplicationServiceName(service)] = struct{}{}
+
+	for _, method := range service.Methods {
+		methodDesc := NewMethodDescriptor(method)
+		methods = append(methods, methodDesc)
+
+		// 添加方法的输入输出类型
+		importMap[buildMessageFullPath(method.Input)] = struct{}{}
+		importMap[buildMessageFullPath(method.Output)] = struct{}{}
+
+		// 获取HTTP规则
+		httpRule := NewHttpRuleDescriptor(method)
+		httpRuleMap[method.GoName] = httpRule
+
+		// 只添加实际用到的参数类型
+		if httpRule.HasPathParams {
+			for _, param := range httpRule.PathParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+
+		if httpRule.HasQueryParams {
+			for _, param := range httpRule.QueryParams {
+				if field, ok := LookupField(method.Input, param.Name); ok {
+					if path, ok := FieldImportPath(field); ok {
+						importMap[path] = struct{}{}
+					}
+				}
+			}
+		}
+	}
+
+	// 转换importMap为imports切片
+	imports = make([]string, 0, len(importMap))
+	for imp := range importMap {
+		imports = append(imports, imp)
+	}
+	return &ControllerTemplateFlux{
+		service:             service,
+		PackageName:         GetServiceJavaPackage(service),
+		Methods:             methods,
+		Imports:             RemoveDuplicates(imports),
+		HttpRuleMap:         httpRuleMap,
+		ServiceName:         serviceName,
+		ServiceVariableName: lcfirst(serviceName),
+	}
+}
+
+type ControllerTemplateFlux struct {
+	service *protogen.Service
+
+	PackageName         string
+	Methods             []*MethodDescriptor
+	Imports             []string
+	HttpRuleMap         map[string]*HttpRuleDescriptor
+	ServiceName         string
+	ServiceVariableName string
+}
+
+func (ctl *ControllerTemplateFlux) ControllerName() string {
+	return strings.Replace(ctl.ServiceName, "ApplicationService", "", -1) + "FluxController"
+}
+
+func (ctl *ControllerTemplateFlux) FileName() string {
+	return Package2Path(ctl.PackageName+"."+ctl.ControllerName()) + ".java"
+}
+
+//go:embed template/controllerFlux.java.tpl
+var controllerFluxTemplate string
+
+func (ctl *ControllerTemplateFlux) Execute() string {
+	tmpl, err := tt.New("ctl").Funcs(funcMap).Parse(controllerFluxTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, ctl); err != nil {
+		panic(err)
+	}
+
+	return strings.TrimSpace(buf.String())
 }
 
 type JavaKindDescriptor struct {
@@ -711,10 +821,6 @@ func ApplicationServiceName(service *protogen.Service) string {
 	return strings.Replace(service.GoName, "Service", "", -1) + "ApplicationService"
 }
 
-func ControllerName(service *protogen.Service) string {
-	return strings.Replace(service.GoName, "Service", "", -1) + "Controller"
-}
-
 func buildEnumFullPath(enum *protogen.Enum) string {
 	JavaPackage := ""
 	var pathParts []string
@@ -844,9 +950,9 @@ func NewWebClientTemplate(service *protogen.Service) Template {
 // 添加新的生成方法
 func (spring *SpringBootPlugin) generateWebClient(file *protogen.File) {
 	for _, service := range file.Services {
-		tmpl := NewWebClientTemplate(service)
-		g := spring.plugin.NewGeneratedFile(tmpl.FileName(), file.GoImportPath)
+		webclient := NewWebClientTemplate(service)
+		g := spring.plugin.NewGeneratedFile(webclient.FileName(), file.GoImportPath)
 		g.P(spring.generateHeader(file))
-		g.P(tmpl.Execute())
+		g.P(webclient.Execute())
 	}
 }
