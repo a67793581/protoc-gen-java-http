@@ -9,17 +9,8 @@ option go_package = "./;options";
 import "google/protobuf/descriptor.proto";
 
 extend google.protobuf.ServiceOptions {
-  optional ServiceOption service_handler = 60000;
+  optional SpringOption spring_option = 60000;
 }
-message ServiceOption {
-  bool spring_flux = 1;
-}
-
-extend google.protobuf.MethodOptions {
-  optional MethodOption method_handler = 61000;
-}
-
-
-message MethodOption {
-
+message SpringOption {
+  bool is_flux = 1;
 }

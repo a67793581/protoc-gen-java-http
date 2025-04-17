@@ -22,27 +22,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ServiceOption struct {
+type SpringOption struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	SpringFlux    bool                   `protobuf:"varint,1,opt,name=spring_flux,json=springFlux,proto3" json:"spring_flux,omitempty"`
+	IsFlux        bool                   `protobuf:"varint,1,opt,name=is_flux,json=isFlux,proto3" json:"is_flux,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ServiceOption) Reset() {
-	*x = ServiceOption{}
+func (x *SpringOption) Reset() {
+	*x = SpringOption{}
 	mi := &file_spring_options_service_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ServiceOption) String() string {
+func (x *SpringOption) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ServiceOption) ProtoMessage() {}
+func (*SpringOption) ProtoMessage() {}
 
-func (x *ServiceOption) ProtoReflect() protoreflect.Message {
+func (x *SpringOption) ProtoReflect() protoreflect.Message {
 	mi := &file_spring_options_service_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,96 +54,43 @@ func (x *ServiceOption) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ServiceOption.ProtoReflect.Descriptor instead.
-func (*ServiceOption) Descriptor() ([]byte, []int) {
+// Deprecated: Use SpringOption.ProtoReflect.Descriptor instead.
+func (*SpringOption) Descriptor() ([]byte, []int) {
 	return file_spring_options_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ServiceOption) GetSpringFlux() bool {
+func (x *SpringOption) GetIsFlux() bool {
 	if x != nil {
-		return x.SpringFlux
+		return x.IsFlux
 	}
 	return false
-}
-
-type MethodOption struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *MethodOption) Reset() {
-	*x = MethodOption{}
-	mi := &file_spring_options_service_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *MethodOption) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MethodOption) ProtoMessage() {}
-
-func (x *MethodOption) ProtoReflect() protoreflect.Message {
-	mi := &file_spring_options_service_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MethodOption.ProtoReflect.Descriptor instead.
-func (*MethodOption) Descriptor() ([]byte, []int) {
-	return file_spring_options_service_proto_rawDescGZIP(), []int{1}
 }
 
 var file_spring_options_service_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.ServiceOptions)(nil),
-		ExtensionType: (*ServiceOption)(nil),
+		ExtensionType: (*SpringOption)(nil),
 		Field:         60000,
-		Name:          "spring.options.service_handler",
-		Tag:           "bytes,60000,opt,name=service_handler",
-		Filename:      "spring/options/service.proto",
-	},
-	{
-		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
-		ExtensionType: (*MethodOption)(nil),
-		Field:         61000,
-		Name:          "spring.options.method_handler",
-		Tag:           "bytes,61000,opt,name=method_handler",
+		Name:          "spring.options.spring_option",
+		Tag:           "bytes,60000,opt,name=spring_option",
 		Filename:      "spring/options/service.proto",
 	},
 }
 
 // Extension fields to descriptorpb.ServiceOptions.
 var (
-	// optional spring.options.ServiceOption service_handler = 60000;
-	E_ServiceHandler = &file_spring_options_service_proto_extTypes[0]
-)
-
-// Extension fields to descriptorpb.MethodOptions.
-var (
-	// optional spring.options.MethodOption method_handler = 61000;
-	E_MethodHandler = &file_spring_options_service_proto_extTypes[1]
+	// optional spring.options.SpringOption spring_option = 60000;
+	E_SpringOption = &file_spring_options_service_proto_extTypes[0]
 )
 
 var File_spring_options_service_proto protoreflect.FileDescriptor
 
 const file_spring_options_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1cspring/options/service.proto\x12\x0espring.options\x1a google/protobuf/descriptor.proto\"0\n" +
-	"\rServiceOption\x12\x1f\n" +
-	"\vspring_flux\x18\x01 \x01(\bR\n" +
-	"springFlux\"\x0e\n" +
-	"\fMethodOption:l\n" +
-	"\x0fservice_handler\x12\x1f.google.protobuf.ServiceOptions\x18\xe0\xd4\x03 \x01(\v2\x1d.spring.options.ServiceOptionR\x0eserviceHandler\x88\x01\x01:h\n" +
-	"\x0emethod_handler\x12\x1e.google.protobuf.MethodOptions\x18\xc8\xdc\x03 \x01(\v2\x1c.spring.options.MethodOptionR\rmethodHandler\x88\x01\x01B\x87\x01\n" +
+	"\x1cspring/options/service.proto\x12\x0espring.options\x1a google/protobuf/descriptor.proto\"'\n" +
+	"\fSpringOption\x12\x17\n" +
+	"\ais_flux\x18\x01 \x01(\bR\x06isFlux:g\n" +
+	"\rspring_option\x12\x1f.google.protobuf.ServiceOptions\x18\xe0\xd4\x03 \x01(\v2\x1c.spring.options.SpringOptionR\fspringOption\x88\x01\x01B\x87\x01\n" +
 	"\x12com.spring.optionsB\fServiceProtoP\x01Z\n" +
 	"./;options\xa2\x02\x03SOX\xaa\x02\x0eSpring.Options\xca\x02\x0eSpring\\Options\xe2\x02\x1aSpring\\Options\\GPBMetadata\xea\x02\x0fSpring::Optionsb\x06proto3"
 
@@ -159,22 +106,18 @@ func file_spring_options_service_proto_rawDescGZIP() []byte {
 	return file_spring_options_service_proto_rawDescData
 }
 
-var file_spring_options_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_spring_options_service_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_spring_options_service_proto_goTypes = []any{
-	(*ServiceOption)(nil),               // 0: spring.options.ServiceOption
-	(*MethodOption)(nil),                // 1: spring.options.MethodOption
-	(*descriptorpb.ServiceOptions)(nil), // 2: google.protobuf.ServiceOptions
-	(*descriptorpb.MethodOptions)(nil),  // 3: google.protobuf.MethodOptions
+	(*SpringOption)(nil),                // 0: spring.options.SpringOption
+	(*descriptorpb.ServiceOptions)(nil), // 1: google.protobuf.ServiceOptions
 }
 var file_spring_options_service_proto_depIdxs = []int32{
-	2, // 0: spring.options.service_handler:extendee -> google.protobuf.ServiceOptions
-	3, // 1: spring.options.method_handler:extendee -> google.protobuf.MethodOptions
-	0, // 2: spring.options.service_handler:type_name -> spring.options.ServiceOption
-	1, // 3: spring.options.method_handler:type_name -> spring.options.MethodOption
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	2, // [2:4] is the sub-list for extension type_name
-	0, // [0:2] is the sub-list for extension extendee
+	1, // 0: spring.options.spring_option:extendee -> google.protobuf.ServiceOptions
+	0, // 1: spring.options.spring_option:type_name -> spring.options.SpringOption
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	1, // [1:2] is the sub-list for extension type_name
+	0, // [0:1] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
 }
 
@@ -189,8 +132,8 @@ func file_spring_options_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_spring_options_service_proto_rawDesc), len(file_spring_options_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
-			NumExtensions: 2,
+			NumMessages:   1,
+			NumExtensions: 1,
 			NumServices:   0,
 		},
 		GoTypes:           file_spring_options_service_proto_goTypes,

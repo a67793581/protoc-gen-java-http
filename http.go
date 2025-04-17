@@ -65,8 +65,8 @@ func (spring *SpringBootPlugin) generateHeader(file *protogen.File) string {
 
 func (spring *SpringBootPlugin) generateSpringBootController(file *protogen.File) {
 	for _, service := range file.Services {
-		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_ServiceHandler).(*options.ServiceOption); serviceHandler != nil {
-			if serviceHandler.SpringFlux {
+		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_SpringOption).(*options.SpringOption); serviceHandler != nil {
+			if serviceHandler.IsFlux {
 				continue
 			}
 		}
@@ -78,15 +78,14 @@ func (spring *SpringBootPlugin) generateSpringBootController(file *protogen.File
 }
 func (spring *SpringBootPlugin) generateSpringBootControllerFlux(file *protogen.File) {
 	for _, service := range file.Services {
-		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_ServiceHandler).(*options.ServiceOption); serviceHandler != nil {
-			if !serviceHandler.SpringFlux {
-				continue
+		if serviceHandler, _ := proto.GetExtension(service.Desc.Options(), options.E_SpringOption).(*options.SpringOption); serviceHandler != nil {
+			if serviceHandler.IsFlux {
+				ctl := NewControllerTemplateFlux(service)
+				g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
+				g.P(spring.generateHeader(file))
+				g.P(ctl.Execute())
 			}
 		}
-		ctl := NewControllerTemplateFlux(service)
-		g := spring.plugin.NewGeneratedFile(ctl.FileName(), file.GoImportPath)
-		g.P(spring.generateHeader(file))
-		g.P(ctl.Execute())
 	}
 }
 
