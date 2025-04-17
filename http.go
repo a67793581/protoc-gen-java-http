@@ -4,7 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"github.com/yunlyz/protoc-gen-java-http/options"
+	"github.com/a67793581/proto-spring-plugin/gen/spring/options"
 	"html/template"
 	"net/http"
 	"regexp"
