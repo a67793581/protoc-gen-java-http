@@ -45,7 +45,7 @@ public class {{.ServiceName}} {
             if (responseBody == null || responseBody.isBlank()) {
                 return null;
             }
-            JsonFormat.parser().merge(responseBody, responseBuilder);
+            JsonFormat.parser().ignoringUnknownFields().merge(responseBody, responseBuilder);
             @SuppressWarnings("unchecked")
             T result = (T) responseBuilder.build();
             return result;
